@@ -44,8 +44,9 @@ export default function Survey() {
   function canAdvance() {
     if (q.type === "contact") return true;
     
-    // Text: must have non-empty value
+    // Text: must have non-empty value (unless optional)
     if (q.type === "text") {
+      if (q.optional) return true;
       return !!(answers[q.id] || "").trim();
     }
     
@@ -85,6 +86,7 @@ export default function Survey() {
 
   function getValidationError() {
     if (q.type === "text") {
+      if (q.optional) return null;
       const val = (answers[q.id] || "").trim();
       if (!val) return "Por favor, descreva sua resposta";
     }

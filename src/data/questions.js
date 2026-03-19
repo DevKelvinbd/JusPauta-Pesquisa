@@ -154,6 +154,7 @@ export const QUESTIONS = [
     question: "Tem algo que te incomoda na rotina e nenhuma ferramenta resolve?",
     subtitle: "Resposta livre — fique à vontade!",
     type: "text",
+    optional: true,
   },
   {
     id: "contato",
