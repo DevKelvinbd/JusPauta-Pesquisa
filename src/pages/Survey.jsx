@@ -62,6 +62,10 @@ export default function Survey() {
     // Multi select with custom input
     if (q.type === "multi") {
       if (!answers[q.id] || answers[q.id].length === 0) return false;
+      
+      // If max is defined, require exactly max selections
+      if (q.max && answers[q.id].length !== q.max) return false;
+      
       if (q.hasCustomInput && (answers[q.id].includes("Outra") || answers[q.id].includes("Outro"))) {
         return !!(customInputs[`${q.id}_outro`] || "").trim();
       }
