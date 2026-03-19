@@ -42,11 +42,78 @@ export default function Survey() {
   }
 
   function canAdvance() {
-    if (q.type === "contact" || q.type === "text") return true;
-    if (q.type === "payment") return !!answers[q.id];
+    if (q.type === "contact") return true;
+    
+    // Text: must have non-empty value
+    if (q.type === "text") {
+      return !!(answers[q.id] || "").trim();
+    }
+    
+    // Single select with custom input
+    if (q.type === "single") {
+      if (!answers[q.id]) return false;
+      if (q.hasCustomInput && answers[q.id] === "Outro") {
+        return !!(customInputs[`${q.id}_outro`] || "").trim();
+      }
+      return true;
+    }
+    
+    // Multi select with custom input
+    if (q.type === "multi") {
+      if (!answers[q.id] || answers[q.id].length === 0) return false;
+      if (q.hasCustomInput && (answers[q.id].includes("Outra") || answers[q.id].includes("Outro"))) {
+        return !!(customInputs[`${q.id}_outro`] || "").trim();
+      }
+      return true;
+    }
+    
+    // Payment: must have selection + value if custom
+    if (q.type === "payment") {
+      if (!answers[q.id]) return false;
+      if (answers[q.id] === "gratuita") return true;
+      if (answers[q.id].includes("R$")) {
+        return !!(customInputs[q.id] || "").trim();
+      }
+      return false;
+    }
+    
+    // Scale and others
     if (!answers[q.id]) return false;
     if (Array.isArray(answers[q.id]) && answers[q.id].length === 0) return false;
     return true;
+  }
+
+  function getValidationError() {
+    if (q.type === "text") {
+      const val = (answers[q.id] || "").trim();
+      if (!val) return "Por favor, descreva sua resposta";
+    }
+
+    if (q.type === "single" && q.hasCustomInput) {
+      if (answers[q.id] === "Outro") {
+        if (!(customInputs[`${q.id}_outro`] || "").trim()) {
+          return "Por favor, descreva qual outra opção";
+        }
+      }
+    }
+
+    if (q.type === "multi" && q.hasCustomInput) {
+      if (answers[q.id]?.includes("Outra") || answers[q.id]?.includes("Outro")) {
+        if (!(customInputs[`${q.id}_outro`] || "").trim()) {
+          return "Por favor, descreva qual outra opção";
+        }
+      }
+    }
+
+    if (q.type === "payment") {
+      if (answers[q.id]?.includes("R$")) {
+        if (!(customInputs[q.id] || "").trim()) {
+          return "Por favor, insira o valor que pagaria";
+        }
+      }
+    }
+
+    return null;
   }
 
   async function next() {
@@ -283,6 +350,13 @@ export default function Survey() {
           />
         )}
 
+        {/* ERROR MESSAGE */}
+        {getValidationError() && (
+          <div style={styles.errorMessage}>
+            {getValidationError()}
+          </div>
+        )}
+
         {/* NAV */}
         <div style={styles.nav}>
           <button onClick={prev} disabled={current === 0}
@@ -290,11 +364,10 @@ export default function Survey() {
             ← Voltar
           </button>
           <button onClick={next}
-            disabled={!canAdvance() && q.type !== "text" && q.type !== "contact" && q.type !== "payment"}
+            disabled={!canAdvance()}
             style={{
               ...styles.navNext,
-              ...(canAdvance() || q.type === "text" || q.type === "contact" || q.type === "payment"
-                ? {} : styles.navNextDisabled),
+              ...(canAdvance() ? styles.navNextEnabled : styles.navNextDisabled),
             }}>
             {sending ? "Enviando..." : current === TOTAL - 1 ? "Enviar Respostas" : "Próxima →"}
           </button>
@@ -575,21 +648,36 @@ const styles = {
     transition: "all 0.2s",
   },
   navNext: {
-    background: "linear-gradient(135deg, var(--accent), #a07850)",
+    background: "linear-gradient(135deg, #22c55e, #16a34a)",
     border: "none",
     borderRadius: 10,
     padding: "12px 28px",
-    color: "var(--dark)",
+    color: "white",
     fontSize: 14,
     fontWeight: 600,
     cursor: "pointer",
     fontFamily: "var(--font-body)",
     transition: "all 0.3s",
   },
+  navNextEnabled: {
+    background: "linear-gradient(135deg, #22c55e, #16a34a)",
+    color: "white",
+    boxShadow: "0 6px 20px rgba(34, 197, 94, 0.3)",
+  },
   navNextDisabled: {
     background: "var(--surface-light)",
     color: "var(--muted)",
     cursor: "not-allowed",
+  },
+  errorMessage: {
+    color: "#ef4444",
+    fontSize: 13,
+    marginTop: 16,
+    padding: "12px 14px",
+    background: "rgba(239, 68, 68, 0.1)",
+    borderRadius: 8,
+    border: "1px solid rgba(239, 68, 68, 0.3)",
+    textAlign: "center",
   },
   footer: {
     color: "rgba(100,116,139,0.5)",
