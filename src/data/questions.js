@@ -13,6 +13,7 @@ export const QUESTIONS = [
       "Estagiário(a) / Recém-formado(a)",
       "Outro",
     ],
+    hasCustomInput: true,
   },
   {
     id: "area",
@@ -31,6 +32,7 @@ export const QUESTIONS = [
       "Consumidor",
       "Outra",
     ],
+    hasCustomInput: true,
   },
   {
     id: "volume",
@@ -63,7 +65,9 @@ export const QUESTIONS = [
       "Comunicar andamentos para os clientes",
       "Delegar e acompanhar tarefas da equipe",
       "Calcular atualizações monetárias / liquidações",
+      "Outra",
     ],
+    hasCustomInput: true,
   },
   {
     id: "gravidade",
@@ -98,7 +102,9 @@ export const QUESTIONS = [
       "IA generativa (ChatGPT, Gemini, Claude, etc.)",
       "Ferramenta específica de IA jurídica (Jusfy, Legalcloud, etc.)",
       "Nenhuma ferramenta específica",
+      "Outra",
     ],
+    hasCustomInput: true,
   },
   {
     id: "satisfacao",
@@ -132,21 +138,15 @@ export const QUESTIONS = [
       "Área do cliente (portal para o cliente acompanhar)",
       "Calculadora de prazos com feriados locais",
       "Dashboard com visão geral do dia",
+      "Outra",
     ],
+    hasCustomInput: true,
   },
   {
     id: "pagamento",
     section: null,
     question: "Quanto você pagaria mensalmente por essa ferramenta?",
-    type: "single",
-    options: [
-      "Nada — só usaria se fosse gratuita",
-      "Até R$ 29/mês",
-      "R$ 30 a R$ 59/mês",
-      "R$ 60 a R$ 99/mês",
-      "R$ 100 a R$ 199/mês",
-      "Mais de R$ 200/mês",
-    ],
+    type: "payment",
   },
   {
     id: "aberta",

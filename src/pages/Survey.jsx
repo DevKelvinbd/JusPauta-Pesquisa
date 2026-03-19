@@ -7,6 +7,7 @@ const TOTAL = QUESTIONS.length;
 
 export default function Survey() {
   const [answers, setAnswers] = useState({});
+  const [customInputs, setCustomInputs] = useState({});
   const [current, setCurrent] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
@@ -33,9 +34,16 @@ export default function Survey() {
   function setText(val) {
     setAnswers((a) => ({ ...a, [q.id]: val }));
   }
+  function setCustom(val) {
+    setCustomInputs((c) => ({ ...c, ...val }));
+  }
+  function setPayment(val) {
+    setAnswers((a) => ({ ...a, [q.id]: val }));
+  }
 
   function canAdvance() {
     if (q.type === "contact" || q.type === "text") return true;
+    if (q.type === "payment") return !!answers[q.id];
     if (!answers[q.id]) return false;
     if (Array.isArray(answers[q.id]) && answers[q.id].length === 0) return false;
     return true;
@@ -53,6 +61,7 @@ export default function Survey() {
     setSending(true);
     const payload = {
       ...answers,
+      ...customInputs,
       contato_nome: contactName || null,
       contato_info: contactInfo || null,
       enviado_em: serverTimestamp(),
@@ -206,6 +215,50 @@ export default function Survey() {
           />
         )}
 
+        {/* PAYMENT INPUT */}
+        {q.type === "payment" && (
+          <div style={styles.paymentWrap}>
+            <div style={styles.paymentOption}>
+              <label style={styles.paymentLabel}>
+                <input 
+                  type="radio" 
+                  name="payment" 
+                  value="gratuita"
+                  checked={answers[q.id] === "gratuita"}
+                  onChange={(e) => setPayment(e.target.value)}
+                  style={styles.radioInput}
+                />
+                <span>Nada — só usaria se fosse gratuita</span>
+              </label>
+            </div>
+            <div style={styles.paymentOption}>
+              <label style={styles.paymentLabel}>
+                <input 
+                  type="radio" 
+                  name="payment" 
+                  value="custom"
+                  checked={answers[q.id] === `R$ ${customInputs[q.id] || ""}`}
+                  onChange={(e) => setPayment(`R$ ${customInputs[q.id] || ""}`)}
+                  style={styles.radioInput}
+                />
+                <span>Pagaria</span>
+              </label>
+              {(answers[q.id]?.includes("R$") || answers[q.id] === "custom") && (
+                <input
+                  type="text"
+                  value={customInputs[q.id] || ""}
+                  onChange={(e) => {
+                    setCustomInputs((c) => ({ ...c, [q.id]: e.target.value }));
+                    if (e.target.value) setPayment(`R$ ${e.target.value}`);
+                  }}
+                  placeholder="Ex: 99,00/mês"
+                  style={styles.paymentInput}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
         {/* CONTACT */}
         {q.type === "contact" && (
           <div style={styles.contactFields}>
@@ -216,6 +269,20 @@ export default function Survey() {
           </div>
         )}
 
+        {/* CUSTOM INPUT FOR "OUTRO" */}
+        {q.hasCustomInput && answers[q.id] && 
+         (q.type === "single" && answers[q.id] === "Outro" || 
+          q.type === "multi" && answers[q.id].includes("Outra") ||
+          q.type === "multi" && answers[q.id].includes("Outro")) && (
+          <input
+            type="text"
+            value={customInputs[`${q.id}_outro`] || ""}
+            onChange={(e) => setCustomInputs((c) => ({ ...c, [`${q.id}_outro`]: e.target.value }))}
+            placeholder="Descreva qual outra opção..."
+            style={styles.textarea}
+          />
+        )}
+
         {/* NAV */}
         <div style={styles.nav}>
           <button onClick={prev} disabled={current === 0}
@@ -223,10 +290,10 @@ export default function Survey() {
             ← Voltar
           </button>
           <button onClick={next}
-            disabled={!canAdvance() && q.type !== "text" && q.type !== "contact"}
+            disabled={!canAdvance() && q.type !== "text" && q.type !== "contact" && q.type !== "payment"}
             style={{
               ...styles.navNext,
-              ...(canAdvance() || q.type === "text" || q.type === "contact"
+              ...(canAdvance() || q.type === "text" || q.type === "contact" || q.type === "payment"
                 ? {} : styles.navNextDisabled),
             }}>
             {sending ? "Enviando..." : current === TOTAL - 1 ? "Enviar Respostas" : "Próxima →"}
@@ -554,5 +621,38 @@ const styles = {
     color: "var(--muted)",
     fontSize: 13,
     opacity: 0.7,
+  },
+  paymentWrap: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 16,
+  },
+  paymentOption: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  },
+  paymentLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    cursor: "pointer",
+    fontSize: 14,
+    color: "var(--light)",
+  },
+  radioInput: {
+    cursor: "pointer",
+    width: 20,
+    height: 20,
+  },
+  paymentInput: {
+    background: "var(--dark)",
+    border: "1px solid var(--surface-light)",
+    borderRadius: 8,
+    padding: "10px 12px",
+    color: "var(--light)",
+    fontSize: 14,
+    fontFamily: "var(--font-body)",
+    boxSizing: "border-box",
   },
 };
